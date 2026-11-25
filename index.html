@@ -67,7 +67,7 @@ label{display:block;font-size:.88rem;color:var(--mute);margin:10px 0 4px}
     <h1>Inventory</h1>
     <button class="btn ghost refresh" id="refresh" aria-label="Refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Refresh</span></button>
   </div>
-  <p class="sub">Manage your riders, vendors and customers in one place. Data is saved in this browser and synced to Google Sheets.</p>
+  <p class="sub">Manage your riders, vendors and customers in one place.</p>
 
   <div class="tabs" role="tablist" id="tabs"></div>
 
@@ -248,7 +248,7 @@ function getCode(){
   if(!c){c=(prompt('Enter the access code')||'').trim();try{localStorage.setItem(CODE_KEY,c);}catch(e){}}
   return c;
 }
-function badCode(){try{localStorage.removeItem(CODE_KEY);}catch(e){}setInfo('Wrong access code. Reload the page and enter it again.');}
+function badCode(){try{localStorage.removeItem(CODE_KEY);}catch(e){}setInfo('Access Unauthorized. Reopen to Try Again.');}
 function setInfo(m){$('#info').textContent=m;}
 function queuePush(){dirty=true;setInfo('Syncing…');clearTimeout(pt);pt=setTimeout(push,800);}
 async function push(){
@@ -258,21 +258,21 @@ async function push(){
     const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:getCode(),data})});
     const j=await r.json();
     if(j.error){pushing=false;dirty=true;if(j.error==='denied')badCode();else setInfo('Sync failed.');return;}
-    pushing=false;setInfo(dirty?'Syncing…':'Synced to Google Sheets at '+new Date().toLocaleTimeString());
-  }catch(e){pushing=false;dirty=true;setInfo('Sync failed. Your data is safe in this browser and will sync on the next change.');toast('Sync failed');}
+    pushing=false;setInfo(dirty?'Syncing…':'Synced to Server at '+new Date().toLocaleTimeString());
+  }catch(e){pushing=false;dirty=true;setInfo('Sync failed. Your data is safe in this app and will sync on the next change.');toast('Sync failed');}
 }
 async function pull(){
   if(pushing||dirty)return;
-  setInfo('Loading from Google Sheets…');
+  setInfo('Loading from Server…');
   try{
     const r=await fetch(SCRIPT_URL+'?code='+encodeURIComponent(getCode()));
     const d=await r.json();
-    if(d.error){if(d.error==='denied')badCode();else setInfo('Could not read data from Google Sheets.');return;}
+    if(d.error){if(d.error==='denied')badCode();else setInfo('Could not read data from Server.');return;}
     const has=Object.keys(CFG).some(k=>d[k]&&d[k].length);
-    if(has){for(const k in CFG)data[k]=d[k]||[];try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}render();setInfo('Synced from Google Sheets at '+new Date().toLocaleTimeString());}
+    if(has){for(const k in CFG)data[k]=d[k]||[];try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}render();setInfo('Synced from Server at '+new Date().toLocaleTimeString());}
     else if(Object.keys(CFG).some(k=>data[k].length))queuePush();
-    else setInfo('Connected to Google Sheets. Nothing saved yet.');
-  }catch(e){setInfo('Could not reach Google Sheets.');}
+    else setInfo('Connected to Server. Nothing saved yet.');
+  }catch(e){setInfo('Could not reach Server.');}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull();});
 
